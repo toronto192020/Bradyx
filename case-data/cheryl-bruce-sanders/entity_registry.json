@@ -1,0 +1,66 @@
+{
+  "people": [
+    {
+      "name": "Cheryl Ann Bruce-Sanders",
+      "role": "Patient",
+      "involvement": "The central figure in the case. A victim of institutional failures, including financial abuse and neglect of her rights and health."
+    },
+    {
+      "name": "Andrew Bruce-Sanders",
+      "role": "Carer/Son/EPOA",
+      "involvement": "Cheryl's primary carer and advocate. Has been fighting to protect her rights, assets, and well-being against multiple institutional failures."
+    },
+    {
+      "name": "Dr. Harvey",
+      "role": "Doctor (Nundah CCDT)",
+      "involvement": "Conducted a cognitive assessment of Cheryl but his report was used out of context at QCAT. A re-referral has been pending for 10 months."
+    },
+    {
+      "name": "Zachary Hutchins",
+      "role": "Social Worker (RBWH)",
+      "involvement": "Initiated the QCAT proceedings that stripped Cheryl of her rights without her knowledge. Misrepresented her capacity and coordinated with Bank of Queensland."
+    },
+    {
+      "name": "Bec O'Connell",
+      "role": "Bank of Queensland representative",
+      "involvement": "Pressured for Cheryl's removal from her SMSF, creating a crisis that was used against Andrew at QCAT."
+    },
+    {
+      "name": "Leitzel Kidd",
+      "role": "Advocate (ADA Australia)",
+      "involvement": "An advocate from ADA Australia who is horrified by the case and is providing support."
+    }
+  ],
+  "institutions": [
+    {
+      "name": "Home Instead Brisbane West",
+      "role": "Home care provider",
+      "failures": "Took $9,000 and provided no service for over two years, after placing Cheryl in a mold-infested property."
+    },
+    {
+      "name": "Royal Brisbane and Women's Hospital (RBWH)",
+      "role": "Hospital",
+      "failures": "Employed Zachary Hutchins, who acted unethically and without due diligence, leading to the QCAT scandal."
+    },
+    {
+      "name": "Bank of Queensland",
+      "role": "Bank",
+      "failures": "Created a financial crisis around the SMSF and coordinated with the RBWH social worker to pressure the family."
+    },
+    {
+      "name": "Queensland Public Trustee",
+      "role": "Administrator",
+      "failures": "Mismanaged Cheryl's finances, depleted her funds, and overstepped their legal authority by acting as a guardian."
+    },
+    {
+      "name": "Comminsure/Hollard",
+      "role": "Insurer",
+      "failures": "Delayed property repairs for four years, failed to identify black mold, and improperly closed claims."
+    },
+    {
+      "name": "Queensland Civil and Administrative Tribunal (QCAT)",
+      "role": "Tribunal",
+      "failures": "Made a decision to appoint the Public Trustee without ensuring Cheryl was notified of the hearing, a fundamental breach of justice."
+    }
+  ]
+}

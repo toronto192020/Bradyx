@@ -1,0 +1,287 @@
+{
+  "patient": {
+    "name": "Cheryl Ann Bruce-Sanders",
+    "dob": "11/09/1947",
+    "ptq_ref": "20675093",
+    "qcat_case_ref": "G52248"
+  },
+  "carer": {
+    "name": "Andrew Bruce-Sanders",
+    "relationship": "son",
+    "role": "EPOA"
+  },
+  "medical_metrics": {
+    "cognitive_score": {
+      "score": "20/30",
+      "test": "MMSE",
+      "date": "2022-09-01",
+      "assessment": "Moderate impairment",
+      "notes": "Fluctuating and environmentally dependent. Stress or unfamiliar settings reduce capacity."
+    },
+    "caa_severity": {
+      "status": "Active/Progressive",
+      "details": "Out of control bleeds noted in Queensland Health imaging from September 2022. Cerebral amyloid plaque deposits present.",
+      "risk_factors": [
+        "hemorrhagic stroke",
+        "falls",
+        "rapid decline"
+      ],
+      "key_events": [
+        {
+          "date": "2025-04-01",
+          "description": "Brain bleed event"
+        },
+        {
+          "date_start": "2025-07-01",
+          "date_end": "2025-08-01",
+          "duration_days": 104,
+          "description": "Hospitalization"
+        }
+      ]
+    }
+  },
+  "capacity_framework": {
+    "status": "Fluctuating, not absent",
+    "dependency": "Environmentally dependent (calm environments improve capacity, stress worsens it)",
+    "support_level": "Graded (can perform tasks with specific supports)",
+    "decision_making_model": "Supported decision-making required, not blanket removal of rights"
+  },
+  "key_dates": [
+    {
+      "date": "2022-09-27",
+      "description": "Queensland Health imaging confirms CAA and 20/30 cognitive score."
+    },
+    {
+      "date": "2022-11-15",
+      "description": "Andrew sends case details to a lawyer, seeking assistance."
+    },
+    {
+      "date": "2022-12-07",
+      "description": "Dr. Harvey from Nundah CCDT conducts an assessment."
+    },
+    {
+      "date": "2022-12-20",
+      "description": "Dr. Harvey issues a letter that omits the assisted capacity framework."
+    },
+    {
+      "date": "2023-11-17",
+      "description": "Bank of Queensland (Bec O'Connell) demands Cheryl's removal from the SMSF."
+    },
+    {
+      "date": "2023-12-01",
+      "description": "BOQ rejects all of Andrew's attempts at compliance regarding the SMSF."
+    },
+    {
+      "date": "2024-01-01",
+      "description": "Cheryl is admitted to Royal Brisbane and Women's Hospital (RBWH)."
+    },
+    {
+      "date": "2024-01-05",
+      "description": "Zachary Hutchins (RBWH social worker) threatens to initiate QCAT proceedings."
+    },
+    {
+      "date": "2024-01-10",
+      "description": "QCAT hearing is held without Cheryl's notification."
+    },
+    {
+      "date": "2024-02-14",
+      "description": "The Public Trustee of Queensland is appointed as administrator."
+    },
+    {
+      "date": "2024-04-06",
+      "description": "Andrew discovers that Cheryl was never notified of the QCAT hearing."
+    },
+    {
+      "date": "2024-08-01",
+      "description": "ADA Australia (Leitzel Kidd) becomes involved in the case."
+    },
+    {
+      "date": "2025-08-26",
+      "description": "Ryan's Rule is invoked due to concerns about Cheryl's care."
+    },
+    {
+      "date": "2025-08-28",
+      "description": "Andrew briefs BlueCare on the details of the QCAT scandal."
+    },
+    {
+      "date": "2025-04-01",
+      "description": "Urgent re-referral made to Dr. Harvey; no appointment has been scheduled for 10 months."
+    }
+  ],
+  "institutional_failures": [
+    {
+      "institution": "Home Instead Brisbane West",
+      "failures": [
+        "Sent Cheryl to a property with a mold issue in August 2023, leading to a mastocytosis infection.",
+        "Demanded private payment for ensuring her safety.",
+        "Accumulated $9,000 in arrears.",
+        "Accepted a $9,000 payment in January 2024 but never resumed services, effectively disappearing for over two years.",
+        "Actions described as \"horrifying\" by ADA Australia."
+      ]
+    },
+    {
+      "institution": "Zachary Hutchins (RBWH Social Worker)",
+      "failures": [
+        "Presented Dr. Harvey's letter at the QCAT hearing out of context, framing it as \"no capacity\" which was a misrepresentation.",
+        "Failed to involve key personnel like Dr. Harvey, Cheree Ambrose, Suzi, and Judy in the assessment.",
+        "Did not conduct a specialist assessment at the STARS facility.",
+        "Coordinated with Bec O'Connell of Bank of Queensland during the SMSF dispute, exacerbating the crisis.",
+        "His actions led to Cheryl's rights being stripped without her knowledge or representation."
+      ]
+    },
+    {
+      "institution": "Bec O'Connell / Bank of Queensland",
+      "failures": [
+        "In November 2023, demanded Cheryl be removed from her SMSF when a term deposit was maturing.",
+        "Rejected all of Andrew's legitimate attempts to comply with their demands.",
+        "Prolonged the crisis through the Christmas and New Year holiday period.",
+        "Coordinated with Zachary Hutchins to apply pressure on Andrew and Cheryl.",
+        "Contributed to the creation of \"evidence\" that was used against Andrew in the QCAT hearing."
+      ]
+    },
+    {
+      "institution": "Queensland Public Trustee",
+      "failures": [
+        "Appointed in February 2024 based on a flawed QCAT decision.",
+        "Conducted only one in-person visit over a 24-month period.",
+        "Depleted Cheryl's bank account to \"very limited funds.\"",
+        "Removed Andrew's access to the CommBank portal, which severely hampered insurance coordination.",
+        "Changed the contact email for Centrelink to their own, isolating Cheryl from her financial information.",
+        "Resisted providing an ATM card for Cheryl's use.",
+        "Demanded the dissolution of the SMSF.",
+        "Acted as a guardian, which was beyond the scope of their appointment as an administrator (ultra vires)."
+      ]
+    },
+    {
+      "institution": "Comminsure/Hollard",
+      "failures": [
+        "Delayed necessary property repairs for four years.",
+        "Failed to discover black mold in the property until December 2025.",
+        "Responded to multiple Internal Dispute Resolution (IDR) complaints with generic, unhelpful statements.",
+        "Applied pressure to close claims prematurely.",
+        "Closed both of Cheryl's claims on February 4, 2026, despite outstanding issues and objections."
+      ]
+    }
+  ],
+  "achievements": [
+    "Successfully regained possession of Cheryl\"s house after a four-year battle.",
+    "Enabled Cheryl to return home after multiple hospitalizations.",
+    "Maintained the SMSF despite significant external pressure to dissolve it.",
+    "Protected Cheryl\"s dignity and rights throughout the ordeal.",
+    "Coordinated complex insurance, property, medical, and legal matters.",
+    "Secured necessary services from BlueCare.",
+    "Paid a $9,000 bill to Home Instead, who then failed to provide services.",
+    "Self-funded legal costs amounting to thousands of dollars.",
+    "Diligently documented all institutional failures.",
+    "Engaged ADA Australia for advocacy support.",
+    "Currently preparing a Section 61 appeal to challenge the QCAT decision."
+  ],
+  "legal_strategy": {
+    "immediate_actions": [
+      {
+        "task": "File a formal complaint with Metro North Health regarding Zachary Hutchins.",
+        "timeline": "Next 48 hours"
+      },
+      {
+        "task": "Send a formal email to Daniel at the Public Trustee of Queensland to clarify their position on the SMSF and information access.",
+        "timeline": "Next 48 hours"
+      },
+      {
+        "task": "Follow up with Dr. Harvey\"s office regarding the 10-month wait for an appointment.",
+        "timeline": "Next 48 hours"
+      }
+    ],
+    "weekly_actions": [
+      {
+        "task": "Request the official QCAT decision for case G52248 from the Public Trustee or QCAT.",
+        "timeline": "This week"
+      },
+      {
+        "task": "File a complaint with the Aged Care Quality and Safety Commission regarding Home Instead.",
+        "timeline": "This week"
+      },
+      {
+        "task": "File a complaint with the Queensland Ombudsman regarding the Public Trustee.",
+        "timeline": "This week"
+      },
+      {
+        "task": "File complaints with the Australian Financial Complaints Authority (AFCA) against Bank of Queensland and Comminsure, as the IDR process has been exhausted.",
+        "timeline": "This week"
+      }
+    ],
+    "monthly_actions": [
+      {
+        "task": "Secure legal representation from an elder law solicitor, possibly through a referral from ADA Law.",
+        "timeline": "This month"
+      },
+      {
+        "task": "Draft a Section 61 appeal to formally challenge the QCAT decision.",
+        "timeline": "This month"
+      },
+      {
+        "task": "Draft a Section 63 application to protect Cheryl from the actions of the Public Trustee.",
+        "timeline": "This month"
+      },
+      {
+        "task": "Compile and organize all evidence for legal proceedings.",
+        "timeline": "This month"
+      },
+      {
+        "task": "Brief the BlueCare team on the case developments.",
+        "timeline": "This month"
+      }
+    ]
+  },
+  "evidence_files": [
+    {
+      "file_name": "qcat_scandal_explanation_email_2025-08-28.eml",
+      "description": "Email from Andrew explaining the QCAT scandal, dated August 28, 2025.",
+      "importance": "High"
+    },
+    {
+      "file_name": "cheryl_notification_certificate.pdf",
+      "description": "Official certificate proving that Cheryl was never notified of the QCAT hearing.",
+      "importance": "High"
+    },
+    {
+      "file_name": "acat_assessment_fluctuating_capacity.pdf",
+      "description": "Current ACAT assessment that documents Cheryl\"s fluctuating capacity.",
+      "importance": "High"
+    },
+    {
+      "file_name": "bec_zach_email_chain.eml",
+      "description": "Email chain between Bec O\"Connell and Zachary Hutchins showing coordinated pressure.",
+      "importance": "High"
+    },
+    {
+      "file_name": "home_instead_payment_and_service_failure.pdf",
+      "description": "Documentation of the $9,000 payment to Home Instead and their subsequent failure to provide services.",
+      "importance": "Medium"
+    },
+    {
+      "file_name": "ptq_account_depletion_records.pdf",
+      "description": "Bank statements and records showing the depletion of Cheryl\"s account by the Public Trustee.",
+      "importance": "Medium"
+    },
+    {
+      "file_name": "evie_freakout_email.eml",
+      "description": "Email from \"Evie\" that demonstrates incompetence or unprofessional conduct.",
+      "importance": "Low"
+    },
+    {
+      "file_name": "ada_horrified_correspondence.eml",
+      "description": "Correspondence from ADA Australia expressing their shock at the handling of the case.",
+      "importance": "Medium"
+    },
+    {
+      "file_name": "queensland_health_imaging_report_2022-09.pdf",
+      "description": "The original Queensland Health imaging report from September 2022, confirming a 20/30 cognitive score and CAA.",
+      "importance": "High"
+    },
+    {
+      "file_name": "email_analysis_500+.pdf",
+      "description": "A summary or analysis of over 500 emails related to the case.",
+      "importance": "Medium"
+    }
+  ]
+}

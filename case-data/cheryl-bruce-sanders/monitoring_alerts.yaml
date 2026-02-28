@@ -1,0 +1,48 @@
+alerts:
+  - name: "Approaching Task Deadline"
+    type: "deadline_tracker"
+    description: "Alert when a task deadline is approaching."
+    trigger:
+      - "tasks with deadline_category == '48hrs' and status != 'done'"
+      - "tasks with deadline_category == 'this_week' and status != 'done'"
+      - "tasks with deadline_category == 'this_month' and status != 'done'"
+    actions:
+      - "notify: assigned_to, 'Task deadline approaching: [task_description]'"
+
+  - name: "Overdue Task"
+    type: "deadline_tracker"
+    description: "Alert when a task is overdue."
+    trigger:
+      - "tasks with status != 'done' and current_date > deadline"
+    actions:
+      - "notify: Andrew Bruce-Sanders, 'Task overdue: [task_description]'"
+
+  - name: "Medical Appointment Follow-up"
+    type: "event_tracker"
+    description: "Follow up on pending medical appointments."
+    trigger:
+      - "event: 'Dr. Harvey re-referral', status: 'pending', age: '> 7 days'"
+    actions:
+      - "create_task: 'Follow up on Dr. Harvey appointment', priority: 'high', deadline_category: '48hrs'"
+
+  - name: "QCAT Hearing Date Approaching"
+    type: "event_tracker"
+    description: "Alert when a QCAT hearing date is approaching."
+    trigger:
+      - "event_type: 'qcat_hearing', date: 'in < 7 days'"
+    actions:
+      - "notify: Legal Team, 'QCAT hearing for case G52248 is on [date]'"
+
+  - name: "Complaint Response Window"
+    type: "response_tracker"
+    description: "Monitor response times for formal complaints."
+    entities:
+      - "Metro North Health"
+      - "Public Trustee of Queensland"
+      - "Aged Care Quality and Safety Commission"
+      - "Queensland Ombudsman"
+      - "AFCA"
+    trigger:
+      - "complaint_filed_date: '> 21 days ago', response_received: false"
+    actions:
+      - "create_task: 'Follow up on complaint to [entity]', priority: 'medium', deadline_category: 'this_week'"

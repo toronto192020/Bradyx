@@ -1,0 +1,143 @@
+[
+  {
+    "task_id": "T01",
+    "description": "File a formal complaint with Metro North Health regarding Zachary Hutchins.",
+    "priority": "High",
+    "deadline_category": "48hrs",
+    "status": "pending",
+    "dependencies": [],
+    "assigned_to": "Legal Team",
+    "evidence_references": [
+      "bec_zach_email_chain.eml",
+      "qcat_scandal_explanation_email_2025-08-28.eml"
+    ]
+  },
+  {
+    "task_id": "T02",
+    "description": "Send a formal email to Daniel at the Public Trustee of Queensland to clarify their position on the SMSF and information access.",
+    "priority": "High",
+    "deadline_category": "48hrs",
+    "status": "pending",
+    "dependencies": [],
+    "assigned_to": "Legal Team",
+    "evidence_references": [
+      "ptq_account_depletion_records.pdf"
+    ]
+  },
+  {
+    "task_id": "T03",
+    "description": "Follow up with Dr. Harvey's office regarding the 10-month wait for an appointment.",
+    "priority": "High",
+    "deadline_category": "48hrs",
+    "status": "pending",
+    "dependencies": [],
+    "assigned_to": "Andrew Bruce-Sanders",
+    "evidence_references": []
+  },
+  {
+    "task_id": "T04",
+    "description": "Request the official QCAT decision for case G52248 from the Public Trustee or QCAT.",
+    "priority": "High",
+    "deadline_category": "this_week",
+    "status": "pending",
+    "dependencies": [],
+    "assigned_to": "Legal Team",
+    "evidence_references": [
+      "cheryl_notification_certificate.pdf"
+    ]
+  },
+  {
+    "task_id": "T05",
+    "description": "File a complaint with the Aged Care Quality and Safety Commission regarding Home Instead.",
+    "priority": "Medium",
+    "deadline_category": "this_week",
+    "status": "pending",
+    "dependencies": [],
+    "assigned_to": "Legal Team",
+    "evidence_references": [
+      "home_instead_payment_and_service_failure.pdf"
+    ]
+  },
+  {
+    "task_id": "T06",
+    "description": "File a complaint with the Queensland Ombudsman regarding the Public Trustee.",
+    "priority": "Medium",
+    "deadline_category": "this_week",
+    "status": "pending",
+    "dependencies": [],
+    "assigned_to": "Legal Team",
+    "evidence_references": [
+      "ptq_account_depletion_records.pdf"
+    ]
+  },
+  {
+    "task_id": "T07",
+    "description": "File complaints with the Australian Financial Complaints Authority (AFCA) against Bank of Queensland and Comminsure.",
+    "priority": "Medium",
+    "deadline_category": "this_week",
+    "status": "pending",
+    "dependencies": [],
+    "assigned_to": "Legal Team",
+    "evidence_references": []
+  },
+  {
+    "task_id": "T08",
+    "description": "Secure legal representation from an elder law solicitor, possibly through a referral from ADA Law.",
+    "priority": "High",
+    "deadline_category": "this_month",
+    "status": "pending",
+    "dependencies": [],
+    "assigned_to": "Andrew Bruce-Sanders",
+    "evidence_references": []
+  },
+  {
+    "task_id": "T09",
+    "description": "Draft a Section 61 appeal to formally challenge the QCAT decision.",
+    "priority": "High",
+    "deadline_category": "this_month",
+    "status": "pending",
+    "dependencies": [
+      "T04",
+      "T08"
+    ],
+    "assigned_to": "Legal Team",
+    "evidence_references": [
+      "cheryl_notification_certificate.pdf",
+      "acat_assessment_fluctuating_capacity.pdf"
+    ]
+  },
+  {
+    "task_id": "T10",
+    "description": "Draft a Section 63 application to protect Cheryl from the actions of the Public Trustee.",
+    "priority": "High",
+    "deadline_category": "this_month",
+    "status": "pending",
+    "dependencies": [
+      "T08"
+    ],
+    "assigned_to": "Legal Team",
+    "evidence_references": [
+      "ptq_account_depletion_records.pdf"
+    ]
+  },
+  {
+    "task_id": "T11",
+    "description": "Compile and organize all evidence for legal proceedings.",
+    "priority": "Medium",
+    "deadline_category": "this_month",
+    "status": "pending",
+    "dependencies": [],
+    "assigned_to": "Andrew Bruce-Sanders",
+    "evidence_references": []
+  },
+  {
+    "task_id": "T12",
+    "description": "Brief the BlueCare team on the case developments.",
+    "priority": "Low",
+    "deadline_category": "this_month",
+    "status": "pending",
+    "dependencies": [],
+    "assigned_to": "Andrew Bruce-Sanders",
+    "evidence_references": []
+  }
+]
