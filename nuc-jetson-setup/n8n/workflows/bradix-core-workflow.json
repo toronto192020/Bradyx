@@ -1,0 +1,238 @@
+{
+  "name": "Bradix — Quiet Guardian Core Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "interval": 6
+            }
+          ]
+        }
+      },
+      "id": "e4f8d2b1-6a7c-4d9e-8f0a-1b2c3d4e5f6g",
+      "name": "Check Deadlines (Every 6h)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "/case-data/cheryl-bruce-sanders/agent_task_tracker.json"
+      },
+      "id": "f5a9c3d2-7b8e-4f0a-91b2-2c3d4e5f6g7h",
+      "name": "Read Task Tracker",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "g6b0d4e3-8c9f-401b-a2c3-3d4e5f6g7h8i",
+      "name": "Parse JSON",
+      "type": "n8n-nodes-base.jsonParse",
+      "typeVersion": 1,
+      "position": [
+        600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "notEqual",
+              "value2": "done"
+            },
+            {
+              "value1": "={{ $json.deadline_category }}",
+              "operation": "equal",
+              "value2": "48hrs"
+            }
+          ]
+        }
+      },
+      "id": "h7c1e5f4-9d0a-412b-b3c4-4d5e6f7g8h9i",
+      "name": "Filter Urgent (48h)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "Bradix Guardian <noreply@bradix.local>",
+        "toEmail": "bts@outlook.com, cherylbruder@icloud.com",
+        "subject": "Action needed: Legal deadline in 48 hours",
+        "text": "Hi Andrew,\n\nOne item needs your attention:\n\n**{{ $json.description }}**\nDue: {{ $json.deadline }}\nCategory: {{ $json.deadline_category }}\n\nThat's it. Everything else is under control.\n\nBradix",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "i8d2f6g5-0e1b-423c-c4d5-5e6f7g8h9i0j",
+      "name": "Send Urgent Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1050,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "interval": 7,
+              "triggerAtHour": 18
+            }
+          ]
+        }
+      },
+      "id": "j9e3g7h6-1f2c-434d-d5e6-6f7g8h9i0j1k",
+      "name": "Sunday Evening (Weekly Digest)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.JETSON_ENDPOINT }}/generate-report",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "report_type",
+              "value": "full_case"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "k0f4h8i7-2g3d-445e-e6f7-7g8h9i0j1k2l",
+      "name": "Query Jetson AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        450,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "Bradix Guardian <noreply@bradix.local>",
+        "toEmail": "bts@outlook.com, cherylbruder@icloud.com",
+        "subject": "Bradix Weekly — what's ahead",
+        "text": "Hi Andrew,\n\nHere is your weekly summary. Everything is under control.\n\n{{ $json.response }}\n\n---\nThe system is watching. You don't have to.\n\nBradix",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "l1g5i9j8-3h4e-456f-f7g8-8h9i0j1k2l3m",
+      "name": "Send Weekly Digest",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        700,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Check Deadlines (Every 6h)": {
+      "main": [
+        [
+          {
+            "node": "Read Task Tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Task Tracker": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "Filter Urgent (48h)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Urgent (48h)": {
+      "main": [
+        [
+          {
+            "node": "Send Urgent Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sunday Evening (Weekly Digest)": {
+      "main": [
+        [
+          {
+            "node": "Query Jetson AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Jetson AI": {
+      "main": [
+        [
+          {
+            "node": "Send Weekly Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Australia/Brisbane"
+  },
+  "id": "bradix-core-workflow",
+  "tags": [
+    "Bradix",
+    "Quiet Guardian"
+  ]
+}

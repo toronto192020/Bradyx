@@ -1,0 +1,153 @@
+version: "3.8"
+
+# Bradix — MSI NUC Service Stack
+# The Quiet Guardian: all services run silently in the background.
+# Access n8n at http://localhost:5678 to manage workflows.
+
+services:
+
+  # ─────────────────────────────────────────────
+  # n8n — Workflow Orchestration Engine
+  # The brain of the Quiet Guardian.
+  # ─────────────────────────────────────────────
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: bradix-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-andrew}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+      - GENERIC_TIMEZONE=Australia/Brisbane
+      - TZ=Australia/Brisbane
+      # Email (SMTP) for notifications
+      - N8N_EMAIL_MODE=smtp
+      - N8N_SMTP_HOST=${SMTP_HOST}
+      - N8N_SMTP_PORT=${SMTP_PORT:-587}
+      - N8N_SMTP_USER=${SMTP_USER}
+      - N8N_SMTP_PASS=${SMTP_PASS}
+      - N8N_SMTP_SENDER=${SMTP_SENDER}
+      # Disable telemetry — case data stays home
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ${CASE_DATA_PATH:-/opt/bradix/case-data}:/case-data:ro
+      - ${WORKFLOWS_PATH:-./workflows}:/workflows:ro
+    networks:
+      - bradix-net
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5678/healthz"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # ─────────────────────────────────────────────
+  # PostgreSQL — n8n Database
+  # ─────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: bradix-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-bradix}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-n8n}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bradix-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bradix}"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # Bradix Monitor — Quiet Guardian watchdog
+  # Checks deadlines and health; speaks only when needed.
+  # ─────────────────────────────────────────────
+  bradix-monitor:
+    build:
+      context: ../monitoring
+      dockerfile: Dockerfile
+    container_name: bradix-monitor
+    restart: unless-stopped
+    environment:
+      - CASE_DATA_PATH=/case-data
+      - JETSON_ENDPOINT=${JETSON_ENDPOINT:-http://jetson.local:8000}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - ALERT_EMAIL_PRIMARY=${ALERT_EMAIL_PRIMARY:-bts@outlook.com}
+      - ALERT_EMAIL_SECONDARY=${ALERT_EMAIL_SECONDARY:-cherylbruder@icloud.com}
+      - TZ=Australia/Brisbane
+    volumes:
+      - ${CASE_DATA_PATH:-/opt/bradix/case-data}:/case-data:ro
+      - monitor_logs:/var/log/bradix
+    networks:
+      - bradix-net
+    depends_on:
+      - n8n
+
+  # ─────────────────────────────────────────────
+  # Bradix Dashboard — Simple status web page
+  # Local only — not exposed externally.
+  # ─────────────────────────────────────────────
+  bradix-dashboard:
+    build:
+      context: ../monitoring/dashboards
+      dockerfile: Dockerfile
+    container_name: bradix-dashboard
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - CASE_DATA_PATH=/case-data
+      - JETSON_ENDPOINT=${JETSON_ENDPOINT:-http://jetson.local:8000}
+      - TZ=Australia/Brisbane
+    volumes:
+      - ${CASE_DATA_PATH:-/opt/bradix/case-data}:/case-data:ro
+    networks:
+      - bradix-net
+
+  # ─────────────────────────────────────────────
+  # Watchtower — Auto-update containers
+  # Keeps the system current without manual effort.
+  # ─────────────────────────────────────────────
+  watchtower:
+    image: containrrr/watchtower
+    container_name: bradix-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 3 * * SUN  # Update Sundays at 3am
+      - WATCHTOWER_NOTIFICATIONS=off        # Silent updates
+      - TZ=Australia/Brisbane
+    networks:
+      - bradix-net
+
+volumes:
+  n8n_data:
+    name: bradix_n8n_data
+  postgres_data:
+    name: bradix_postgres_data
+  monitor_logs:
+    name: bradix_monitor_logs
+
+networks:
+  bradix-net:
+    name: bradix_network
+    driver: bridge

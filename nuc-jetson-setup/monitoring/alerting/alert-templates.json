@@ -1,0 +1,76 @@
+{
+  "templates": {
+    "urgent_deadline": {
+      "subject": "Action needed: {{task_description}} — due {{deadline}}",
+      "tone": "calm and clear",
+      "body": "Hi Andrew,\n\nOne item needs your attention:\n\n**{{task_description}}**\nDue: {{deadline}}\nCategory: {{deadline_category}}\n\nNext step: {{next_step}}\n\nThat's it. Everything else is under control.\n\nBradix"
+    },
+    "complaint_followup": {
+      "subject": "Follow-up: Complaint to {{entity}} — response window closing",
+      "tone": "calm and clear",
+      "body": "Hi Andrew,\n\nA complaint response window is closing:\n\n**Complaint filed with:** {{entity}}\n**Filed:** {{filed_date}}\n**Response due by:** {{response_due_date}}\n**Status:** No response received\n\nSuggested action: Send a follow-up email or call {{entity}} to request an update.\n\nBradix"
+    },
+    "medical_alert": {
+      "subject": "CHERYL — SuresafeGO alert: {{alert_type}}",
+      "tone": "urgent but calm",
+      "body": "A SuresafeGO alert has been triggered for Cheryl.\n\n**Alert type:** {{alert_type}}\n**Time:** {{timestamp}}\n**Last known location:** {{last_location}}\n\nPlease check on Cheryl immediately.\n\nBradix"
+    },
+    "hearing_reminder": {
+      "subject": "QCAT hearing approaching — Case G52248 — {{hearing_date}}",
+      "tone": "calm and clear",
+      "body": "Hi Andrew,\n\nYour QCAT hearing for case G52248 is coming up:\n\n**Date:** {{hearing_date}}\n**Case:** G52248 — Cheryl Ann Bruce-Sanders\n\n**Preparation checklist:**\n{{preparation_checklist}}\n\nBradix"
+    },
+    "weekly_digest": {
+      "subject": "Bradix Weekly — what's ahead ({{week_start}} to {{week_end}})",
+      "tone": "calm, forward-looking, supportive",
+      "body": "Hi Andrew,\n\nHere is your weekly summary. Everything is under control.\n\n{{#if upcoming_deadlines}}\n## Upcoming Deadlines\n{{upcoming_deadlines}}\n{{/if}}\n\n{{#if open_complaints}}\n## Complaint Tracking\n{{open_complaints}}\n{{/if}}\n\n{{#if medical_appointments}}\n## Medical Appointments\n{{medical_appointments}}\n{{/if}}\n\n{{#if completed_this_week}}\n## Completed This Week\n{{completed_this_week}}\n{{/if}}\n\n{{#if system_issues}}\n## System Status\n{{system_issues}}\n{{/if}}\n\n---\nThe system is watching. You don't have to.\n\nBradix"
+    },
+    "full_case_report": {
+      "subject": "Bradix — Full Case Status Report ({{date}})",
+      "tone": "professional, comprehensive",
+      "sections": [
+        "case_overview",
+        "key_people_and_institutions",
+        "timeline",
+        "open_tasks",
+        "legal_strategy",
+        "complaint_status",
+        "medical_status",
+        "smsf_status",
+        "evidence_inventory"
+      ]
+    },
+    "human_rights_report": {
+      "subject": "Bradix — Human Rights & Elder Abuse Report ({{date}})",
+      "tone": "formal, legal, factual",
+      "sections": [
+        "executive_summary",
+        "parties_involved",
+        "chronology_of_events",
+        "institutional_failures",
+        "legal_framework",
+        "evidence_references",
+        "remedies_sought"
+      ],
+      "disclaimer": "This report documents events for advocacy and legal purposes. It is generated on request only."
+    },
+    "smsf_status": {
+      "subject": "Bradix — SMSF Status Summary ({{date}})",
+      "tone": "calm, financial",
+      "body": "Hi Andrew,\n\nHere is the current SMSF status summary:\n\n**SMSF Name:** Bruder SMSF\n**Status:** {{smsf_status}}\n**Open items:** {{smsf_open_items}}\n**PTQ position:** {{ptq_position}}\n\nBradix"
+    },
+    "bluecare_brief": {
+      "subject": "BlueCare Briefing — Cheryl Ann Bruce-Sanders ({{date}})",
+      "tone": "professional, care-focused",
+      "sections": [
+        "patient_overview",
+        "medical_summary",
+        "capacity_framework",
+        "current_care_needs",
+        "communication_preferences",
+        "key_contacts",
+        "important_context"
+      ]
+    }
+  }
+}

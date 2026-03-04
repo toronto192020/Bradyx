@@ -1,0 +1,230 @@
+# ============================================================
+# Bradix — Quiet Guardian Alert Configuration
+# ============================================================
+#
+# DESIGN PHILOSOPHY:
+#   This system speaks only when something genuinely needs
+#   Andrew's attention. The default state is silence.
+#
+#   The past is documented once and held by the system.
+#   Alerts are always about what is NEXT — never a replay
+#   of what went wrong.
+#
+#   When an alert fires, it delivers one clear message
+#   with one clear action. No chains. No escalations.
+#   No guilt for not responding immediately.
+#
+# THREE TIERS:
+#   URGENT     — Immediate email (both addresses)
+#   WEEKLY     — Sunday evening digest (both addresses)
+#   ON_REQUEST — Manual trigger only
+#
+# ============================================================
+
+global:
+  timezone: "Australia/Brisbane"
+  alert_email_primary: "bts@outlook.com"
+  alert_email_secondary: "cherylbruder@icloud.com"
+  digest_day: "Sunday"
+  digest_time: "18:00"        # 6pm Sunday — calm end of weekend
+  silence_hours:              # Never alert during these hours
+    start: "22:00"
+    end: "07:30"
+  default_mode: "quiet"       # Options: quiet | verbose (quiet is default)
+
+# ─────────────────────────────────────────────────────────────
+# TIER 1: URGENT ALERTS
+# These fire immediately. Reserved for genuine time-critical
+# events. Keep this list short and meaningful.
+# ─────────────────────────────────────────────────────────────
+urgent_alerts:
+
+  - name: "Legal Deadline — 48 Hours"
+    description: >
+      A legal deadline (complaint filing, court response, QCAT
+      submission) is due within 48 hours and is not yet marked done.
+    trigger:
+      condition: "task.deadline_category == '48hrs' AND task.status != 'done'"
+      check_interval: "6h"
+    action:
+      send_email: true
+      recipients: ["primary", "secondary"]
+      subject: "Action needed: Legal deadline in 48 hours"
+      template: "urgent_deadline"
+      include_task_detail: true
+      include_next_step: true
+    cooldown: "24h"           # Don't re-alert for the same task within 24h
+
+  - name: "Complaint Response Window Expiring"
+    description: >
+      A formal complaint has been filed and the statutory response
+      window (21 days for most bodies) expires within 48 hours
+      with no response received.
+    trigger:
+      condition: "complaint.filed_date > 19_days_ago AND complaint.response_received == false"
+      check_interval: "12h"
+    action:
+      send_email: true
+      recipients: ["primary"]
+      subject: "Follow-up needed: Complaint response window closing"
+      template: "complaint_followup"
+      include_entity: true
+      include_filed_date: true
+    cooldown: "48h"
+
+  - name: "SuresafeGO — Fall or Panic Alert"
+    description: >
+      Cheryl's SuresafeGO device has triggered a fall detection
+      or manual panic alert. This is the highest priority alert
+      in the system.
+    trigger:
+      condition: "suresafego.alert_type IN ['fall', 'panic', 'no_movement']"
+      source: "email_monitor"
+      check_interval: "2m"
+    action:
+      send_email: true
+      recipients: ["primary", "secondary"]
+      subject: "CHERYL ALERT — SuresafeGO triggered"
+      template: "medical_alert"
+      include_alert_type: true
+      include_timestamp: true
+      include_last_location: true
+    cooldown: "none"          # Never suppress medical alerts
+
+  - name: "QCAT Hearing Date — 7 Days"
+    description: >
+      A QCAT hearing date for case G52248 is within 7 days.
+    trigger:
+      condition: "event.type == 'qcat_hearing' AND event.date <= 7_days_from_now"
+      check_interval: "24h"
+    action:
+      send_email: true
+      recipients: ["primary"]
+      subject: "QCAT hearing approaching — Case G52248"
+      template: "hearing_reminder"
+      include_hearing_date: true
+      include_preparation_checklist: true
+    cooldown: "48h"
+
+  - name: "Section 61 Appeal — Filing Deadline"
+    description: >
+      The Section 61 QCAT appeal has a filing deadline approaching.
+    trigger:
+      condition: "task.tag == 'section_61_appeal' AND task.deadline <= 7_days_from_now AND task.status != 'done'"
+      check_interval: "24h"
+    action:
+      send_email: true
+      recipients: ["primary"]
+      subject: "Section 61 Appeal — filing deadline approaching"
+      template: "urgent_deadline"
+    cooldown: "24h"
+
+# ─────────────────────────────────────────────────────────────
+# TIER 2: WEEKLY DIGEST
+# Everything with a time dimension that is NOT urgent.
+# Delivered as a single calm email on Sunday evening.
+# ─────────────────────────────────────────────────────────────
+weekly_digest:
+
+  enabled: true
+  schedule: "Sunday 18:00 Australia/Brisbane"
+  recipients: ["primary", "secondary"]
+  subject: "Bradix Weekly — what's ahead"
+
+  sections:
+
+    - name: "Upcoming Deadlines (Next 14 Days)"
+      description: "Tasks and deadlines due in the next two weeks."
+      query: "tasks WHERE deadline <= 14_days_from_now AND status != 'done'"
+      sort: "deadline ASC"
+      max_items: 10
+      show_if_empty: false
+
+    - name: "Complaint Tracking"
+      description: "Open complaints and their response status."
+      query: "complaints WHERE status == 'open'"
+      include_filed_date: true
+      include_response_due_date: true
+      show_if_empty: false
+
+    - name: "Medical Appointments"
+      description: "Pending and upcoming medical appointments."
+      query: "events WHERE type == 'medical_appointment' AND status IN ['pending', 'scheduled']"
+      show_if_empty: false
+      note: "Dr. Harvey re-referral has been pending since April 2025."
+
+    - name: "Completed This Week"
+      description: "Tasks completed in the past 7 days — progress made."
+      query: "tasks WHERE status == 'done' AND completed_date >= 7_days_ago"
+      show_if_empty: false
+      tone: "positive"        # Frame completions as progress, not just checkboxes
+
+    - name: "System Health"
+      description: "Brief status of NUC, Jetson, and sync services."
+      include_nuc_status: true
+      include_jetson_status: true
+      include_last_sync: true
+      show_if_all_healthy: false  # Omit this section if everything is fine
+
+  footer: >
+    This is your weekly summary from the Bradix Quiet Guardian.
+    Everything is under control. The system is watching.
+    Reply to this email or visit http://nuc.local:8080 for full status.
+
+# ─────────────────────────────────────────────────────────────
+# TIER 3: ON-REQUEST (Manual Triggers)
+# These never fire automatically. Triggered via n8n UI,
+# the dashboard, or the query-case.py script.
+# ─────────────────────────────────────────────────────────────
+on_request:
+
+  - name: "Full Case Status Report"
+    description: "Complete case summary with all open items, entities, and timeline."
+    trigger: "manual"
+    output: ["email", "pdf"]
+    template: "full_case_report"
+
+  - name: "Human Rights / Elder Abuse Report"
+    description: >
+      Formal report suitable for submission to the Queensland Human Rights
+      Commission, Aged Care Quality and Safety Commission, or Australian
+      Human Rights Commission. Documents institutional failures with
+      dates, evidence references, and legal framework.
+    trigger: "manual"
+    output: ["pdf", "docx"]
+    template: "human_rights_report"
+    warning: >
+      This report contains detailed documentation of past institutional
+      failures. It is generated only when needed for advocacy or legal
+      purposes — not for day-to-day use.
+
+  - name: "AI Case Query"
+    description: "Ask the Jetson AI a question about the case."
+    trigger: "manual"
+    endpoint: "${JETSON_ENDPOINT}/query"
+    output: ["email", "console"]
+
+  - name: "SMSF Status Summary"
+    description: "Current status of the Bruder SMSF and any pending actions."
+    trigger: "manual"
+    output: ["email"]
+    template: "smsf_status"
+
+  - name: "BlueCare Coordination Brief"
+    description: "Summary for briefing BlueCare team on Cheryl's current needs and history."
+    trigger: "manual"
+    output: ["pdf"]
+    template: "bluecare_brief"
+
+# ─────────────────────────────────────────────────────────────
+# SUPPRESSION RULES
+# Things the system explicitly does NOT alert on.
+# ─────────────────────────────────────────────────────────────
+suppression:
+
+  - "Do not send daily status emails unless explicitly requested."
+  - "Do not re-alert on tasks that have been acknowledged (snoozed)."
+  - "Do not surface past institutional failure details in routine alerts."
+  - "Do not send any alert between 22:00 and 07:30 Brisbane time, except SuresafeGO medical alerts."
+  - "Do not send duplicate alerts for the same event within the cooldown window."
+  - "Do not alert on system metrics (CPU, RAM, disk) unless a service is actually down."
