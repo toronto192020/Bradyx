@@ -1,0 +1,66 @@
+# ============================================================
+# Bradix — Quiet Guardian Alert Configuration
+# ============================================================
+# Default mode: QUIET. Speaks only when something genuinely
+# needs Andrew's attention.
+# ============================================================
+
+global:
+  timezone: "Australia/Brisbane"
+  alert_email_primary: "bts@outlook.com"
+  alert_email_secondary: "cherylbruder@icloud.com"
+  digest_day: "Monday"
+  digest_time: "09:00"
+  silence_hours:
+    start: "22:00"
+    end: "07:30"
+  default_mode: "quiet"
+
+# TIER 1: URGENT — Immediate email (both addresses)
+urgent_alerts:
+  - name: "Legal Deadline — 48 Hours"
+    trigger: "task.deadline_category == '48hrs' AND task.status != 'done'"
+    check_interval: "daily_8am"
+    recipients: ["primary", "secondary"]
+    cooldown: "24h"
+
+  - name: "Overdue Task Escalation"
+    trigger: "task.status == 'pending' AND task.deadline_category == '48hrs'"
+    check_interval: "daily_10am"
+    recipients: ["primary", "secondary"]
+    cooldown: "24h"
+    note: "Repeats daily until acknowledged"
+
+  - name: "SuresafeGO — Fall or Panic Alert"
+    trigger: "suresafego.alert_type IN ['fall', 'panic', 'no_movement']"
+    check_interval: "2m"
+    recipients: ["primary", "secondary"]
+    cooldown: "none"
+
+# TIER 2: WEEKLY DIGEST — Monday 9am
+weekly_digest:
+  enabled: true
+  schedule: "Monday 09:00 Australia/Brisbane"
+  recipients: ["primary", "secondary"]
+  subject: "Bradix Weekly — what's ahead"
+  sections:
+    - "Upcoming Deadlines (Next 14 Days)"
+    - "Overdue Tasks"
+    - "Complaint Tracking"
+    - "Completed This Week"
+    - "System Health (only if issues)"
+
+# TIER 3: ON-REQUEST — Manual trigger only
+on_request:
+  - "Full Case Status Report"
+  - "Human Rights / Elder Abuse Report"
+  - "AI Case Query"
+  - "SMSF Status Summary"
+  - "BlueCare Coordination Brief"
+
+# SUPPRESSION
+suppression:
+  - "No daily status emails unless requested"
+  - "No alerts between 22:00 and 07:30 (except medical)"
+  - "No duplicate alerts within cooldown window"
+  - "No system metric alerts unless a service is actually down"

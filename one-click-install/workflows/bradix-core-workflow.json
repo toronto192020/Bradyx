@@ -1,0 +1,419 @@
+{
+  "name": "Bradix — Quiet Guardian Autonomous Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "a1000001-0001-4000-8000-000000000001",
+      "name": "Daily Deadline Check (8am)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [180, 300]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "a1000001-0002-4000-8000-000000000002",
+      "name": "Weekly Digest (Monday 9am)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [180, 700]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            }
+          ]
+        }
+      },
+      "id": "a1000001-0003-4000-8000-000000000003",
+      "name": "Daily Overdue Escalation (10am)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [180, 1100]
+    },
+    {
+      "parameters": {
+        "operation": "readFile",
+        "fileSelector": "/case-data/cheryl-bruce-sanders/agent_task_tracker.json"
+      },
+      "id": "a1000001-0010-4000-8000-000000000010",
+      "name": "Read Task Tracker (Deadline)",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "operation": "readFile",
+        "fileSelector": "/case-data/cheryl-bruce-sanders/agent_task_tracker.json"
+      },
+      "id": "a1000001-0011-4000-8000-000000000011",
+      "name": "Read Task Tracker (Overdue)",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [420, 1100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the task tracker JSON from file content\nconst fileContent = $input.first().binary.data;\nconst text = Buffer.from(fileContent.data, 'base64').toString('utf8');\nconst tasks = JSON.parse(text);\n\n// Get current date\nconst now = new Date();\nconst today = now.toISOString().split('T')[0];\n\n// Filter for 48-hour urgent tasks that are not done\nconst urgentTasks = tasks.filter(t => \n  t.deadline_category === '48hrs' && \n  t.status !== 'done' && \n  t.status !== 'acknowledged'\n);\n\n// Also check for tasks with actual deadlines within 48 hours\nconst soonTasks = tasks.filter(t => {\n  if (t.status === 'done' || t.status === 'acknowledged') return false;\n  if (!t.deadline) return false;\n  const deadline = new Date(t.deadline);\n  const hoursUntil = (deadline - now) / (1000 * 60 * 60);\n  return hoursUntil > 0 && hoursUntil <= 48;\n});\n\n// Combine and deduplicate\nconst allUrgent = [...urgentTasks, ...soonTasks];\nconst seen = new Set();\nconst unique = allUrgent.filter(t => {\n  if (seen.has(t.task_id)) return false;\n  seen.add(t.task_id);\n  return true;\n});\n\nif (unique.length === 0) {\n  return []; // No urgent tasks — stay quiet\n}\n\n// Format task list for email\nconst taskList = unique.map(t => \n  `• [${t.task_id}] ${t.description} (Priority: ${t.priority}, Status: ${t.status})`\n).join('\\n');\n\nreturn [{\n  json: {\n    hasUrgent: true,\n    taskCount: unique.length,\n    taskList: taskList,\n    tasks: unique,\n    checkedAt: now.toISOString()\n  }\n}];"
+      },
+      "id": "a1000001-0020-4000-8000-000000000020",
+      "name": "Filter 48h Urgent Tasks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the task tracker JSON\nconst fileContent = $input.first().binary.data;\nconst text = Buffer.from(fileContent.data, 'base64').toString('utf8');\nconst tasks = JSON.parse(text);\n\nconst now = new Date();\n\n// Find overdue tasks (48hrs category that have been pending too long, or past deadline)\nconst overdueTasks = tasks.filter(t => {\n  if (t.status === 'done' || t.status === 'acknowledged') return false;\n  \n  // Tasks marked 48hrs that are still pending\n  if (t.deadline_category === '48hrs' && t.status === 'pending') return true;\n  \n  // Tasks with actual deadlines that have passed\n  if (t.deadline) {\n    const deadline = new Date(t.deadline);\n    return deadline < now;\n  }\n  \n  return false;\n});\n\nif (overdueTasks.length === 0) {\n  return []; // Nothing overdue — stay quiet\n}\n\nconst taskList = overdueTasks.map(t => \n  `• [${t.task_id}] ${t.description} (Priority: ${t.priority})`\n).join('\\n');\n\nreturn [{\n  json: {\n    hasOverdue: true,\n    taskCount: overdueTasks.length,\n    taskList: taskList,\n    tasks: overdueTasks,\n    checkedAt: now.toISOString()\n  }\n}];"
+      },
+      "id": "a1000001-0021-4000-8000-000000000021",
+      "name": "Filter Overdue Tasks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 1100]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_SENDER || 'Bradix Guardian <bts@outlook.com>' }}",
+        "toEmail": "bts@outlook.com, cherylbruder@icloud.com",
+        "subject": "=Bradix URGENT: {{ $json.taskCount }} deadline(s) within 48 hours",
+        "text": "=Hi Andrew,\n\nThe following task(s) need attention within 48 hours:\n\n{{ $json.taskList }}\n\nThat's it. Everything else is under control.\n\nThe system is watching.\n\n— Bradix Quiet Guardian\n\nChecked: {{ $json.checkedAt }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a1000001-0030-4000-8000-000000000030",
+      "name": "Send Urgent Alert Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [940, 300],
+      "credentials": {
+        "smtp": {
+          "id": "bradix-smtp",
+          "name": "Bradix SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_SENDER || 'Bradix Guardian <bts@outlook.com>' }}",
+        "toEmail": "bts@outlook.com, cherylbruder@icloud.com",
+        "subject": "=Bradix OVERDUE: {{ $json.taskCount }} task(s) need action",
+        "text": "=Hi Andrew,\n\nThe following task(s) are overdue and need your attention:\n\n{{ $json.taskList }}\n\nThis is a daily reminder until these are marked done or acknowledged.\n\nTo acknowledge: update the task status in the case data.\n\n— Bradix Quiet Guardian\n\nChecked: {{ $json.checkedAt }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a1000001-0031-4000-8000-000000000031",
+      "name": "Send Overdue Escalation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [940, 1100],
+      "credentials": {
+        "smtp": {
+          "id": "bradix-smtp",
+          "name": "Bradix SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.JETSON_ENDPOINT || 'http://jetson.local:8000' }}/generate-report",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"report_type\": \"weekly_digest\", \"format\": \"markdown\"}",
+        "options": {
+          "timeout": 120000,
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "a1000001-0040-4000-8000-000000000040",
+      "name": "Query Jetson AI — Weekly Digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [420, 700],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle Jetson response or generate fallback digest\nconst input = $input.first().json;\n\nlet digestContent = '';\n\nif (input.response) {\n  // Jetson AI provided analysis\n  digestContent = input.response;\n} else {\n  // Fallback: generate digest from task data directly\n  digestContent = 'AI analysis unavailable this week. Here is the task summary:\\n\\n';\n  digestContent += 'Please check the n8n dashboard for full task status.\\n';\n  digestContent += 'Jetson AI may be offline — the system will retry next week.';\n}\n\nconst now = new Date();\nconst weekOf = now.toLocaleDateString('en-AU', { \n  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',\n  timeZone: 'Australia/Brisbane'\n});\n\nreturn [{\n  json: {\n    digestContent: digestContent,\n    weekOf: weekOf,\n    generatedAt: now.toISOString(),\n    jetsonAvailable: !!input.response\n  }\n}];"
+      },
+      "id": "a1000001-0041-4000-8000-000000000041",
+      "name": "Format Weekly Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 700]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_SENDER || 'Bradix Guardian <bts@outlook.com>' }}",
+        "toEmail": "bts@outlook.com, cherylbruder@icloud.com",
+        "subject": "=Bradix Weekly — {{ $json.weekOf }}",
+        "text": "=Hi Andrew,\n\nHere is your weekly summary. Everything is under control.\n\n{{ $json.digestContent }}\n\n---\n\nThe system is watching. You don't have to.\n\nAccess the dashboard anytime:\n  Local: http://localhost:5678\n  Phone: Use your Tailscale IP\n\n— Bradix Quiet Guardian\n\nGenerated: {{ $json.generatedAt }}\nJetson AI: {{ $json.jetsonAvailable ? 'Online' : 'Offline (fallback mode)' }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a1000001-0050-4000-8000-000000000050",
+      "name": "Send Weekly Digest Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [940, 700],
+      "credentials": {
+        "smtp": {
+          "id": "bradix-smtp",
+          "name": "Bradix SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log this workflow execution\nconst now = new Date();\nconst trigger = $input.first().json;\n\nconst logEntry = {\n  timestamp: now.toISOString(),\n  workflow: 'bradix-core',\n  trigger: $executionId,\n  action: 'urgent_alert_sent',\n  taskCount: trigger.taskCount || 0,\n  details: trigger.taskList || 'No details'\n};\n\nconsole.log(JSON.stringify(logEntry));\n\nreturn [{ json: logEntry }];"
+      },
+      "id": "a1000001-0060-4000-8000-000000000060",
+      "name": "Log Urgent Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log weekly digest execution\nconst now = new Date();\nconst trigger = $input.first().json;\n\nconst logEntry = {\n  timestamp: now.toISOString(),\n  workflow: 'bradix-core',\n  trigger: $executionId,\n  action: 'weekly_digest_sent',\n  jetsonAvailable: trigger.jetsonAvailable || false,\n  weekOf: trigger.weekOf || 'unknown'\n};\n\nconsole.log(JSON.stringify(logEntry));\n\nreturn [{ json: logEntry }];"
+      },
+      "id": "a1000001-0061-4000-8000-000000000061",
+      "name": "Log Weekly Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 700]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log overdue escalation\nconst now = new Date();\nconst trigger = $input.first().json;\n\nconst logEntry = {\n  timestamp: now.toISOString(),\n  workflow: 'bradix-core',\n  trigger: $executionId,\n  action: 'overdue_escalation_sent',\n  taskCount: trigger.taskCount || 0,\n  details: trigger.taskList || 'No details'\n};\n\nconsole.log(JSON.stringify(logEntry));\n\nreturn [{ json: logEntry }];"
+      },
+      "id": "a1000001-0062-4000-8000-000000000062",
+      "name": "Log Overdue Escalation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 1100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.JETSON_ENDPOINT || 'http://jetson.local:8000' }}/analyze-deadlines",
+        "options": {
+          "timeout": 120000,
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "a1000001-0070-4000-8000-000000000070",
+      "name": "Query Jetson AI — Deadline Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [420, 500],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine task filter results with AI analysis\nconst urgentData = $('Filter 48h Urgent Tasks').first().json;\nconst aiAnalysis = $input.first().json;\n\nlet enhancedList = urgentData.taskList || '';\n\nif (aiAnalysis && aiAnalysis.analysis) {\n  enhancedList += '\\n\\n--- AI Analysis ---\\n' + aiAnalysis.analysis;\n}\n\nreturn [{\n  json: {\n    ...urgentData,\n    taskList: enhancedList,\n    aiEnhanced: !!aiAnalysis.analysis\n  }\n}];"
+      },
+      "id": "a1000001-0071-4000-8000-000000000071",
+      "name": "Enhance with AI Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 500]
+    }
+  ],
+  "connections": {
+    "Daily Deadline Check (8am)": {
+      "main": [
+        [
+          {
+            "node": "Read Task Tracker (Deadline)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Task Tracker (Deadline)": {
+      "main": [
+        [
+          {
+            "node": "Filter 48h Urgent Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter 48h Urgent Tasks": {
+      "main": [
+        [
+          {
+            "node": "Send Urgent Alert Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Query Jetson AI — Deadline Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Urgent Alert Email": {
+      "main": [
+        [
+          {
+            "node": "Log Urgent Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Digest (Monday 9am)": {
+      "main": [
+        [
+          {
+            "node": "Query Jetson AI — Weekly Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Jetson AI — Weekly Digest": {
+      "main": [
+        [
+          {
+            "node": "Format Weekly Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Weekly Digest": {
+      "main": [
+        [
+          {
+            "node": "Send Weekly Digest Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Weekly Digest Email": {
+      "main": [
+        [
+          {
+            "node": "Log Weekly Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Overdue Escalation (10am)": {
+      "main": [
+        [
+          {
+            "node": "Read Task Tracker (Overdue)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Task Tracker (Overdue)": {
+      "main": [
+        [
+          {
+            "node": "Filter Overdue Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Overdue Tasks": {
+      "main": [
+        [
+          {
+            "node": "Send Overdue Escalation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Overdue Escalation Email": {
+      "main": [
+        [
+          {
+            "node": "Log Overdue Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Jetson AI — Deadline Analysis": {
+      "main": [
+        [
+          {
+            "node": "Enhance with AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Australia/Brisbane",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Bradix"
+    },
+    {
+      "name": "Quiet Guardian"
+    },
+    {
+      "name": "Autonomous"
+    }
+  ]
+}
