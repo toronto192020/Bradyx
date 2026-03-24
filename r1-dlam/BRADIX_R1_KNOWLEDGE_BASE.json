@@ -1,0 +1,283 @@
+{
+  "bradix_version": "1.0",
+  "last_updated": "2026-03-05",
+  "owner": "Andrew Bruce-Sanders",
+  "system": "BRADIX — AI Care Management System",
+  "r1_dlam_context": "You are BRADIX, Andrew's AI care management assistant. You know everything about his case, his mother Cheryl's care, his legal battles, and his technology system. Answer questions directly and honestly. Prioritise Andrew's wellbeing and Cheryl's safety above all else.",
+
+  "identity": {
+    "name": "Andrew Bruce-Sanders",
+    "personality_type": "INFJ — The Advocate",
+    "role": "Full-time carer, AI systems builder, last Bruce-Sanders line",
+    "health": "Chronic kidney disease — blood pressure must be monitored",
+    "carer_status": "90+ days without respite as of March 2026",
+    "father": "James Bruce-Sanders — Intel 4004 taximeter pioneer",
+    "companies": ["Brecks.systems", "Bruder Technologies"],
+    "email_primary": "andrew@brecks.systems",
+    "dashboard": "https://andrewdash-rdsy5laf.manus.space",
+    "query_hints": ["who am I", "tell me about Andrew", "what is my health", "who was my dad"]
+  },
+
+  "cheryl": {
+    "full_name": "Cheryl Bruce-Sanders",
+    "dob": "1947-09-11",
+    "age": 78,
+    "personality_type": "ISFJ — The Protector",
+    "diagnosis": "Cerebral Amyloid Angiopathy (CAA)",
+    "mmse_score": "20/30",
+    "capacity_status": "HAS LEGAL CAPACITY — do not let anyone claim otherwise",
+    "hcp_surplus": "$18,000+ available",
+    "hcp_provider": "BlueCare",
+    "bluecare_contact": "Suze — 0455 256 397",
+    "care_approach": "Actions not words. Routine. Physical comfort first. Structured absence. Camera monitoring.",
+    "query_hints": ["tell me about Cheryl", "what is mum's diagnosis", "does mum have capacity", "what care does mum get", "what is the HCP surplus"]
+  },
+
+  "care_schedule": [
+    {
+      "service": "Nursing — Vanessa Ford",
+      "frequency": "Every 2 weeks",
+      "day": "Friday",
+      "time": "12:00-13:00",
+      "next": "2026-03-06",
+      "query_hints": ["when is the nurse coming", "Vanessa Ford", "nursing visit"]
+    },
+    {
+      "service": "Dementia Consultancy — Joe",
+      "date": "2026-03-12",
+      "time": "13:30-14:30",
+      "type": "In-home",
+      "query_hints": ["when is Joe coming", "dementia consultancy", "Joe visit"]
+    },
+    {
+      "service": "Joe — Initial Admin Visit",
+      "date": "2026-03-13",
+      "time": "09:30-10:30",
+      "type": "In-home",
+      "query_hints": ["Joe admin visit"]
+    },
+    {
+      "service": "Domestic Assistance — Black and White Home Services",
+      "frequency": "Every 2 weeks",
+      "day": "Wednesday",
+      "time": "13:30-14:30",
+      "next": "2026-03-18",
+      "query_hints": ["domestic assistance", "cleaning", "Black and White"]
+    },
+    {
+      "service": "Podiatry",
+      "date": "2026-03-18",
+      "time": "11:30",
+      "query_hints": ["podiatry", "foot care"]
+    }
+  ],
+
+  "deadlines": [
+    {
+      "id": "D01",
+      "priority": "CRITICAL",
+      "title": "AFCA Complaint — Hollard Insurance",
+      "deadline": "2026-03-06",
+      "action": "File online at afca.org.au",
+      "status": "NOT DONE",
+      "query_hints": ["AFCA", "Hollard", "insurance complaint", "most urgent deadline", "what do I need to do today"]
+    },
+    {
+      "id": "D02",
+      "priority": "CRITICAL",
+      "title": "TMR Rego Cancellation Resend",
+      "deadline": "2026-03-05",
+      "action": "Email regocancellations@tmr.qld.gov.au — previous email bounced",
+      "status": "NOT DONE",
+      "query_hints": ["TMR", "rego cancellation", "registration", "SPER fines", "email bounced"]
+    },
+    {
+      "id": "D03",
+      "priority": "URGENT",
+      "title": "BlueCare Service Agreement",
+      "deadline": "2026-03-06",
+      "action": "Call Suze: 0455 256 397",
+      "status": "NOT DONE",
+      "query_hints": ["BlueCare", "service agreement", "Suze", "HCP", "home care package"]
+    },
+    {
+      "id": "D04",
+      "priority": "URGENT",
+      "title": "SPER Stat Dec — 4 Fines",
+      "deadline": "ASAP",
+      "action": "Complete Stat Dec, get JP witness online, submit to SPER: 1300 304 702",
+      "status": "DRAFT READY",
+      "query_hints": ["SPER fines", "stat dec", "statutory declaration", "JP", "licence suspended"]
+    },
+    {
+      "id": "D05",
+      "priority": "HIGH",
+      "title": "QSuper Class Action Late Registration",
+      "deadline": "2026-04-16",
+      "action": "Email qsuper@shine.com.au — Member 194997808, ID CL00512793-00",
+      "status": "EMAIL DRAFT READY",
+      "query_hints": ["QSuper", "class action", "Shine Lawyers", "super settlement", "late registration"]
+    },
+    {
+      "id": "D06",
+      "priority": "HIGH",
+      "title": "Queensland Ombudsman — PTQ Complaint",
+      "deadline": "2026-03-31",
+      "action": "File at ombudsman.qld.gov.au",
+      "status": "NOT DONE",
+      "query_hints": ["Ombudsman", "PTQ complaint", "Public Trustee"]
+    },
+    {
+      "id": "D07",
+      "priority": "HIGH",
+      "title": "Aged Care Commission — Home Instead Complaint",
+      "deadline": "2026-03-31",
+      "action": "File at agedcarequality.gov.au",
+      "status": "NOT DONE",
+      "query_hints": ["Home Instead", "aged care complaint", "Aged Care Commission", "$9000"]
+    },
+    {
+      "id": "D08",
+      "priority": "HIGH",
+      "title": "QCAT Section 61 Appeal + Section 63 Application",
+      "deadline": "2026-03-31",
+      "action": "Engage elder law solicitor via ADA Law referral first",
+      "status": "NOT DONE",
+      "query_hints": ["QCAT", "appeal", "guardianship", "Section 61", "Section 63"]
+    }
+  ],
+
+  "people": [
+    {
+      "name": "David",
+      "role": "EV Charging Solutions",
+      "trust_rating": 5,
+      "verdict": "TRUSTWORTHY — the one person who delivers",
+      "contact": "Meeting scheduled 5 March 2026 2pm",
+      "query_hints": ["David", "EV charging", "who can I trust", "electrician"]
+    },
+    {
+      "name": "Sam Alexander",
+      "role": "Personal contact",
+      "trust_rating": 2,
+      "verdict": "CAUTION — pattern of inconsistent follow-through based on email evidence",
+      "query_hints": ["Sam", "Sam Alexander", "can I trust Sam"]
+    },
+    {
+      "name": "Andrew Mills",
+      "role": "Personal contact",
+      "trust_rating": 1,
+      "verdict": "DO NOT RELY ON — Andrew built his Sunday launch pack at 3am, organised his legal position, housing, inventory. Mills was 'not ready'. Pattern of taking without delivering.",
+      "evidence": "Photo evidence: Sunday Launch Pack mind map created 8 June 2025 at 3:22am",
+      "query_hints": ["Andrew Mills", "Mills", "can I trust Andrew Mills", "what did Mills do"]
+    },
+    {
+      "name": "Stuart",
+      "role": "Personal contact",
+      "trust_rating": 2,
+      "verdict": "CAUTION — similar pattern to others. Andrew gives, Stuart takes.",
+      "query_hints": ["Stuart", "can I trust Stuart"]
+    },
+    {
+      "name": "Cheryl Bruce-Sanders",
+      "role": "Mother / care recipient",
+      "trust_rating": 3,
+      "verdict": "NOT TOXIC — but the dynamic is harmful. ISFJ under stress + CAA + Atwood family pattern. Solution: actions not words, routine, structured absence.",
+      "query_hints": ["Mum", "Cheryl", "is mum toxic", "what do I do about mum"]
+    },
+    {
+      "name": "Suze",
+      "role": "BlueCare coordinator",
+      "contact": "0455 256 397",
+      "trust_rating": 4,
+      "verdict": "Professional — call to sign service agreement",
+      "query_hints": ["Suze", "BlueCare coordinator", "who do I call for BlueCare"]
+    }
+  ],
+
+  "institutions": [
+    {
+      "name": "PTQ — Public Trustee Queensland",
+      "ref": "20675093",
+      "status": "FAILED — depleted Cheryl's funds, acted ultra vires",
+      "action": "Queensland Ombudsman complaint",
+      "query_hints": ["PTQ", "Public Trustee", "what did PTQ do"]
+    },
+    {
+      "name": "QCAT",
+      "case": "G52248",
+      "status": "FAILED — guardianship order made without Cheryl's knowledge",
+      "action": "Section 61 Appeal + Section 63 Application",
+      "query_hints": ["QCAT", "guardianship", "what is case G52248"]
+    },
+    {
+      "name": "Home Instead Brisbane West",
+      "status": "FAILED — took $9,000, abandoned care",
+      "action": "Aged Care Quality and Safety Commission complaint",
+      "query_hints": ["Home Instead", "what happened with Home Instead", "$9000"]
+    },
+    {
+      "name": "BHC — Brisbane Housing Company",
+      "status": "FAILED — 48hrs notice, charged $4,466 for disposal",
+      "action": "Challengeable — document evidence",
+      "query_hints": ["BHC", "Brisbane Housing", "what happened with BHC", "disposal charge"]
+    },
+    {
+      "name": "TMR — Transport and Main Roads",
+      "status": "FAILED — email address invalid, cancellation bounced",
+      "correct_email": "regocancellations@tmr.qld.gov.au",
+      "action": "Resend cancellation + Stat Dec for SPER fines",
+      "query_hints": ["TMR", "rego", "registration", "what is the correct TMR email"]
+    },
+    {
+      "name": "SPER",
+      "status": "FAILED — suspended licence twice during crisis",
+      "action": "Stat Dec for 4 fines — ASAP",
+      "contact": "1300 304 702",
+      "query_hints": ["SPER", "fines", "licence suspended", "what do I do about SPER"]
+    },
+    {
+      "name": "Hollard Insurance",
+      "status": "FAILED — refused legitimate claim",
+      "action": "AFCA complaint — deadline 6 March 2026",
+      "query_hints": ["Hollard", "insurance", "AFCA complaint"]
+    }
+  ],
+
+  "boundary_rules": [
+    "No unscheduled visitors — everyone books through calendar",
+    "All communication via text or email first — no surprise calls",
+    "Business hours only: 10am-2pm — outside that, Andrew is caring",
+    "One task per interaction — they come, do their thing, leave",
+    "Andrew does not explain or justify — they read the brief or they don't come",
+    "If anyone causes Cheryl distress — visit ends immediately",
+    "With Cheryl: actions only, no words — put things down and walk away",
+    "Structured absence: 20 minutes in another room, camera on, door half open",
+    "INFJ door close: one text, no follow-up, no explanation"
+  ],
+
+  "bradix_system": {
+    "dashboard": "https://andrewdash-rdsy5laf.manus.space",
+    "github": "toronto192020/Bradyx",
+    "hardware": {
+      "nuc": "MSI Cubi N ADL — orchestration brain",
+      "jetson_1": "NVIDIA Jetson — 100 TOPS AI inference",
+      "jetson_2": "NVIDIA Jetson — 100 TOPS AI inference",
+      "combined_tops": "200 TOPS — 2 billion times more powerful than Intel 4004",
+      "nas": "D-Link NAS",
+      "fridge": "Samsung Family Hub — potential evidence storage"
+    },
+    "software": ["Ubuntu", "n8n", "Home Assistant", "Tailscale"],
+    "query_hints": ["what is BRADIX", "what hardware do I have", "what is the dashboard URL", "how powerful is my Jetson"]
+  },
+
+  "quick_actions": {
+    "most_urgent": "File AFCA complaint at afca.org.au — deadline TOMORROW 6 March",
+    "call_for_help_now": "Carer Gateway: 1800 422 737 | Lifeline: 13 11 14",
+    "bluecare": "Call Suze: 0455 256 397",
+    "sper": "Call: 1300 304 702",
+    "tmr_correct_email": "regocancellations@tmr.qld.gov.au",
+    "qsuper_email": "qsuper@shine.com.au",
+    "query_hints": ["what do I do right now", "most urgent", "who do I call", "what is the most important thing today"]
+  }
+}
