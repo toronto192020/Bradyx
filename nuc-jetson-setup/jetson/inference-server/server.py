@@ -10,11 +10,13 @@ The AI runs entirely on local hardware — no case data is sent
 to external cloud services.
 
 Endpoints:
-    GET  /health          — Health check
-    POST /query           — Ask a question about the case
-    POST /generate-report — Generate a formatted report
-    POST /summarize       — Summarize a document or text
-    GET  /models          — List available local models
+    GET  /health              — Health check
+    POST /query               — Ask a question about the case
+    POST /generate-report     — Generate a formatted report
+    POST /summarize           — Summarize a document or text
+    GET  /models              — List available local models
+    POST /agent/trigger       — Trigger an agentic workflow step
+    GET  /health/diagnose     — Extended system diagnostics
 
 Usage:
     python3 server.py
@@ -26,8 +28,11 @@ import json
 import time
 import httpx
 import logging
+import platform
+import shutil
+import subprocess
 from datetime import datetime
-from typing import Optional
+from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -80,6 +85,21 @@ class InferenceResponse(BaseModel):
     response: str
     model: str
     processing_time_ms: int
+    timestamp: str
+
+
+class AgentTriggerRequest(BaseModel):
+    workflow: str  # "deadline_check", "weekly_digest", "healing_scan", "custom"
+    payload: Optional[Dict[str, Any]] = None
+    model: Optional[str] = None
+    async_exec: bool = False  # If True, return immediately and run in background
+
+
+class AgentTriggerResponse(BaseModel):
+    workflow: str
+    status: str  # "triggered", "completed", "queued"
+    result: Optional[str] = None
+    processing_time_ms: Optional[int] = None
     timestamp: str
 
 
@@ -353,6 +373,187 @@ async def summarize_document(request: SummarizeRequest):
         processing_time_ms=elapsed_ms,
         timestamp=datetime.now().isoformat(),
     )
+
+
+# ─── Agentic Workflow Trigger ─────────────────────────────────────────────────
+
+# Workflow prompts executed autonomously by the agent trigger endpoint.
+DEFAULT_AGENT_PROMPT = "Provide a status update on the current case."
+
+AGENT_WORKFLOW_PROMPTS: Dict[str, str] = {
+    "deadline_check": (
+        "Review the current case data and identify ALL tasks with deadlines within "
+        "the next 7 days. For each task list: task ID, description, deadline, "
+        "current status, and the single most important next action. "
+        "Be concise and prioritise by urgency."
+    ),
+    "weekly_digest": (
+        "Generate a concise weekly briefing for Andrew covering: "
+        "(1) Critical items requiring action this week, "
+        "(2) Progress made on open legal and care matters, "
+        "(3) Any upcoming care appointments for Cheryl, "
+        "(4) Financial or compliance deadlines. "
+        "Keep it under 400 words and lead with the most urgent item."
+    ),
+    "healing_scan": (
+        "Based on the current case data, identify any tasks, deadlines, or "
+        "evidence items that appear to be stalled, overdue, or inconsistent "
+        "with expectations. Suggest one corrective action for each issue found."
+    ),
+}
+
+
+async def _run_agent_workflow(workflow: str, payload: Optional[Dict], model: str) -> str:
+    """Execute an agent workflow and return the AI response."""
+    base_prompt = AGENT_WORKFLOW_PROMPTS.get(
+        workflow,
+        (payload.get("prompt", DEFAULT_AGENT_PROMPT) if payload else DEFAULT_AGENT_PROMPT),
+    )
+    case_context = load_case_context()
+    full_prompt = f"Case Context:\n{case_context}\n\nTask:\n{base_prompt}"
+    return await call_ollama(full_prompt, model)
+
+
+@app.post("/agent/trigger", response_model=AgentTriggerResponse)
+async def agent_trigger(request: AgentTriggerRequest, background_tasks: BackgroundTasks):
+    """
+    Trigger an agentic workflow step on the local AI.
+
+    Workflows:
+    - deadline_check : Scan case data for upcoming deadlines
+    - weekly_digest  : Generate a weekly briefing
+    - healing_scan   : Identify stalled or inconsistent tasks
+    - custom         : Run a custom prompt (provide payload.prompt)
+
+    Set async_exec=true to return immediately (fire-and-forget).
+
+    Example:
+        POST /agent/trigger
+        {"workflow": "deadline_check"}
+    """
+    valid_workflows = list(AGENT_WORKFLOW_PROMPTS.keys()) + ["custom"]
+    if request.workflow not in valid_workflows:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Unknown workflow: '{request.workflow}'. "
+                f"Valid workflows: {valid_workflows}"
+            ),
+        )
+    if request.workflow == "custom" and not (request.payload or {}).get("prompt"):
+        raise HTTPException(
+            status_code=400,
+            detail="Workflow 'custom' requires payload.prompt to be set.",
+        )
+
+    model = request.model or DEFAULT_MODEL
+    timestamp = datetime.now().isoformat()
+
+    if request.async_exec:
+        # Fire and forget — return immediately
+        background_tasks.add_task(
+            _run_agent_workflow, request.workflow, request.payload, model
+        )
+        logger.info(f"Agent workflow '{request.workflow}' queued (async)")
+        return AgentTriggerResponse(
+            workflow=request.workflow,
+            status="queued",
+            result=None,
+            timestamp=timestamp,
+        )
+
+    # Synchronous execution
+    start = time.time()
+    result = await _run_agent_workflow(request.workflow, request.payload, model)
+    elapsed_ms = int((time.time() - start) * 1000)
+    logger.info(f"Agent workflow '{request.workflow}' completed in {elapsed_ms}ms")
+
+    return AgentTriggerResponse(
+        workflow=request.workflow,
+        status="completed",
+        result=result,
+        processing_time_ms=elapsed_ms,
+        timestamp=timestamp,
+    )
+
+
+# ─── Extended Diagnostics ─────────────────────────────────────────────────────
+
+@app.get("/health/diagnose")
+async def health_diagnose():
+    """
+    Extended system diagnostics endpoint.
+
+    Returns detailed health information beyond the basic /health check:
+    - Ollama status and available models
+    - Disk usage on the working directory
+    - Case data file presence
+    - Python runtime and platform info
+    - Inference server version
+    """
+    timestamp = datetime.now().isoformat()
+
+    # Ollama status
+    ollama_ok = False
+    available_models: List[str] = []
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(f"{OLLAMA_BASE_URL}/api/tags")
+            if resp.status_code == 200:
+                ollama_ok = True
+                available_models = [m["name"] for m in resp.json().get("models", [])]
+    except Exception:
+        pass
+
+    # Disk usage
+    disk_info: Dict[str, Any] = {}
+    try:
+        total, used, free = shutil.disk_usage(CASE_DATA_PATH if os.path.exists(CASE_DATA_PATH) else "/")
+        disk_info = {
+            "path": CASE_DATA_PATH,
+            "total_gb": round(total / (1024 ** 3), 1),
+            "used_gb": round(used / (1024 ** 3), 1),
+            "free_gb": round(free / (1024 ** 3), 1),
+            "percent_used": int(used / total * 100),
+        }
+    except Exception as exc:
+        disk_info = {"error": "disk_usage_unavailable"}
+        logger.warning(f"Could not read disk usage: {exc}")
+
+    # Case data presence
+    case_files = {
+        "case_data.json": os.path.join(CASE_DATA_PATH, "cheryl-bruce-sanders", "case_data.json"),
+        "agent_task_tracker.json": os.path.join(CASE_DATA_PATH, "cheryl-bruce-sanders", "agent_task_tracker.json"),
+        "entity_registry.json": os.path.join(CASE_DATA_PATH, "cheryl-bruce-sanders", "entity_registry.json"),
+    }
+    case_data_status = {
+        name: os.path.exists(path) for name, path in case_files.items()
+    }
+
+    return {
+        "status": "healthy" if ollama_ok else "degraded",
+        "timestamp": timestamp,
+        "inference_server": {
+            "version": app.version,
+            "default_model": DEFAULT_MODEL,
+            "ollama_url": OLLAMA_BASE_URL,
+        },
+        "ollama": {
+            "running": ollama_ok,
+            "available_models": available_models,
+        },
+        "disk": disk_info,
+        "case_data": {
+            "path": CASE_DATA_PATH,
+            "files": case_data_status,
+            "all_present": all(case_data_status.values()),
+        },
+        "runtime": {
+            "python": platform.python_version(),
+            "platform": platform.system(),
+            "hostname": platform.node(),
+        },
+    }
 
 
 if __name__ == "__main__":
