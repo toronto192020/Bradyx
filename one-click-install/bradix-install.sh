@@ -119,6 +119,7 @@ sudo apt-get install -y -qq \
     python3 \
     python3-pip \
     python3-venv \
+    python3-requests \
     avahi-daemon \
     avahi-utils \
     libnss-mdns \
@@ -606,6 +607,106 @@ chmod +x "$SYNC_SCRIPT"
 
 log "Hourly GitHub sync configured."
 
+# ─── AGENTIC DATA LINKS & HEALING AUTOMATION ───────────────
+log "Setting up Agentic Data Links and Healing Automation..."
+
+# Install Python dependency required by the new modules (httpx for Jetson server)
+pip3 install --quiet httpx 2>/dev/null || \
+    python3 -m pip install --quiet httpx 2>/dev/null || \
+    warn "Could not install httpx — Jetson inference server may be degraded"
+
+# Make sure the agents directory exists and copy agentic_data_links module
+mkdir -p "${BRADIX_DIR}/agents"
+AGENT_SRC="${BRADIX_DIR}/repo/agent-integrations"
+if [ -f "${AGENT_SRC}/agentic_data_links.py" ]; then
+    cp "${AGENT_SRC}/agentic_data_links.py" "${BRADIX_DIR}/agents/"
+    chmod +x "${BRADIX_DIR}/agents/agentic_data_links.py"
+    log "Agentic data links module installed at ${BRADIX_DIR}/agents/"
+else
+    warn "agentic_data_links.py not found in repo — skipping"
+fi
+
+# Create the healing automation runner (sources .env so env vars are available)
+HEAL_RUNNER="${BRADIX_DIR}/one-click-install/scripts/bradix-heal.sh"
+cat > "$HEAL_RUNNER" <<'HEALEOF'
+#!/usr/bin/env bash
+# Bradix Healing Automation — run by cron every 15 minutes
+# Can also be called manually: bradix-heal
+set -euo pipefail
+
+ENV_FILE="/opt/bradix/one-click-install/docker/.env"
+HEALING_SCRIPT="/opt/bradix/one-click-install/monitoring/healing_automation.py"
+LOG_FILE="/var/log/bradix/healing.log"
+
+# Load environment variables from .env so SMTP, JETSON_ENDPOINT, etc. are set
+if [ -f "$ENV_FILE" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . "$ENV_FILE"
+    set +a
+fi
+
+export BRADIX_LOG_DIR="/var/log/bradix"
+export CASE_DATA_PATH="/opt/bradix/case-data"
+
+if [ -f "$HEALING_SCRIPT" ]; then
+    python3 "$HEALING_SCRIPT" >> "$LOG_FILE" 2>&1
+else
+    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] healing_automation.py not found at $HEALING_SCRIPT" >> "$LOG_FILE"
+fi
+HEALEOF
+chmod +x "$HEAL_RUNNER"
+
+# Create the agentic data links runner
+LINKS_RUNNER="${BRADIX_DIR}/one-click-install/scripts/bradix-links.sh"
+cat > "$LINKS_RUNNER" <<'LINKSEOF'
+#!/usr/bin/env bash
+# Bradix Agentic Data Links — run by cron every 30 minutes
+# Can also be called manually: bradix-links
+set -euo pipefail
+
+ENV_FILE="/opt/bradix/one-click-install/docker/.env"
+LINKS_SCRIPT="/opt/bradix/agents/agentic_data_links.py"
+LOG_FILE="/var/log/bradix/data_links.log"
+
+# Load environment variables from .env so JETSON_ENDPOINT, N8N_ENDPOINT, etc. are set
+if [ -f "$ENV_FILE" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . "$ENV_FILE"
+    set +a
+fi
+
+export BRADIX_LOG_DIR="/var/log/bradix"
+export CASE_DATA_PATH="/opt/bradix/case-data"
+
+if [ -f "$LINKS_SCRIPT" ]; then
+    python3 "$LINKS_SCRIPT" >> "$LOG_FILE" 2>&1
+else
+    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] agentic_data_links.py not found at $LINKS_SCRIPT" >> "$LOG_FILE"
+fi
+LINKSEOF
+chmod +x "$LINKS_RUNNER"
+
+# Install cron: healing automation every 15 minutes
+(crontab -l 2>/dev/null | grep -v "bradix-heal" || true; \
+ echo "*/15 * * * * ${HEAL_RUNNER} >> /var/log/bradix/healing.log 2>&1") | crontab -
+
+# Install cron: agentic data links every 30 minutes
+(crontab -l 2>/dev/null | grep -v "bradix-links" || true; \
+ echo "*/30 * * * * ${LINKS_RUNNER} >> /var/log/bradix/data_links.log 2>&1") | crontab -
+
+# Install bradix-heal as a globally accessible command
+sudo cp "$HEAL_RUNNER" /usr/local/bin/bradix-heal
+sudo chmod +x /usr/local/bin/bradix-heal
+
+# Install bradix-links as a globally accessible command
+sudo cp "$LINKS_RUNNER" /usr/local/bin/bradix-links
+sudo chmod +x /usr/local/bin/bradix-links
+
+log "Healing automation active (every 15 min). Run 'bradix-heal' anytime."
+log "Agentic data links active (every 30 min). Run 'bradix-links' anytime."
+
 # ─── SYSTEMD SERVICE ───────────────────────────────────────
 banner "STEP 11/12: Setting Up Auto-Start"
 
@@ -872,10 +973,14 @@ echo "  • Overdue tasks escalated daily"
 echo "  • Case data syncs from GitHub every hour"
 echo "  • Full backup to NAS every night at 2am"
 echo "  • Jetson AI queried for case analysis"
+echo "  • Healing automation monitors & self-repairs every 15 min"
+echo "  • Agentic data links poll external services every 30 min"
 echo "  • System auto-starts on reboot"
 echo ""
-echo "You don't need to do anything else."
-echo "The Quiet Guardian is active."
+echo "Manual commands:"
+echo "  bradix-status   — full system status"
+echo "  bradix-heal     — run healing cycle now"
+echo "  bradix-links    — trigger all data links now"
 echo ""
 echo -e "${CYAN}Credentials saved to: ${BRADIX_DIR}/CREDENTIALS.txt${NC}"
 echo ""
