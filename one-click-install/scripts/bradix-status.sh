@@ -291,6 +291,112 @@ fi
 
 echo ""
 
+# ─── AGENTIC & HEALING AUTOMATION STATUS ──────────────────
+echo -e "${BOLD}  AGENTIC & HEALING AUTOMATION${NC}"
+echo -e "  ─────────────────────────────────────────────"
+
+# Healing automation — show last run and result from log
+HEALING_LOG="${LOG_DIR}/healing.log"
+HEALING_STATE="${LOG_DIR}/healing_actions.json"
+
+if [ -f "$HEALING_STATE" ]; then
+    LAST_HEALED=$(python3 -c "
+import json, sys
+try:
+    with open('${HEALING_STATE}') as f:
+        entries = json.load(f)
+    if entries:
+        last = entries[-1]
+        ts = last.get('timestamp', '?')
+        healed = last.get('overall_healed', True)
+        actions = last.get('actions_taken', 0)
+        unresolved = len(last.get('unresolved', []))
+        if healed:
+            print(f'OK|{ts}|{actions} action(s)|')
+        else:
+            print(f'FAIL|{ts}|{actions} action(s)|{unresolved} unresolved')
+    else:
+        print('UNKNOWN|||')
+except Exception as e:
+    print(f'UNKNOWN|||{e}')
+" 2>/dev/null || echo "UNKNOWN|||")
+    HL_STATUS=$(echo "$LAST_HEALED" | cut -d'|' -f1)
+    HL_TS=$(echo "$LAST_HEALED" | cut -d'|' -f2)
+    HL_ACTIONS=$(echo "$LAST_HEALED" | cut -d'|' -f3)
+    HL_EXTRA=$(echo "$LAST_HEALED" | cut -d'|' -f4)
+
+    if [ "$HL_STATUS" = "OK" ]; then
+        echo -e "  $OK Healing Automation    ${GREEN}HEALTHY${NC}    (last: ${HL_TS})"
+        if [ -n "$HL_ACTIONS" ] && [ "$HL_ACTIONS" != "0 action(s)" ]; then
+            echo -e "     Last cycle:            ${DIM}${HL_ACTIONS} taken${NC}"
+        fi
+    elif [ "$HL_STATUS" = "FAIL" ]; then
+        echo -e "  $FAIL Healing Automation    ${RED}UNRESOLVED${NC} (last: ${HL_TS})"
+        echo -e "     ${RED}${HL_EXTRA}${NC}"
+        echo -e "     ${DIM}Run 'bradix-heal' to retry manually${NC}"
+    else
+        echo -e "  $UNKNOWN Healing Automation    ${DIM}NO HISTORY YET${NC}"
+        echo -e "     ${DIM}Run 'bradix-heal' to start first cycle${NC}"
+    fi
+elif [ -f "$HEALING_LOG" ]; then
+    LAST_HEAL_LOG=$(tail -1 "$HEALING_LOG" 2>/dev/null || echo "")
+    echo -e "  $WARN Healing Automation    ${YELLOW}RUNNING${NC}"
+    if [ -n "$LAST_HEAL_LOG" ]; then
+        echo -e "     ${DIM}${LAST_HEAL_LOG}${NC}"
+    fi
+else
+    echo -e "  $UNKNOWN Healing Automation    ${DIM}NOT YET RUN${NC}"
+    echo -e "     ${DIM}Run 'bradix-heal' to run first healing cycle${NC}"
+fi
+
+# Check that healing cron is installed
+if crontab -l 2>/dev/null | grep -q "bradix-heal"; then
+    echo -e "  $OK Healing Cron           ${GREEN}ACTIVE${NC}     (every 15 min)"
+else
+    echo -e "  $WARN Healing Cron           ${YELLOW}NOT INSTALLED${NC}"
+    echo -e "     ${DIM}Re-run installer or: crontab -e${NC}"
+fi
+
+echo ""
+
+# Agentic data links — show last run from state file
+LINKS_STATE="${LOG_DIR}/data_links_state.json"
+LINKS_LOG="${LOG_DIR}/data_links.log"
+
+if command -v python3 &>/dev/null && [ -f "/opt/bradix/agents/agentic_data_links.py" ]; then
+    if [ -f "$LINKS_STATE" ]; then
+        LINKS_SUMMARY=$(python3 -c "
+import json, sys
+try:
+    with open('${LINKS_STATE}') as f:
+        state = json.load(f)
+    total = len(state)
+    healthy = sum(1 for v in state.values() if v.get('last_success', False))
+    last_ts = max((v.get('last_run','') for v in state.values() if v.get('last_run')), default='never')
+    print(f'{healthy}/{total}|{last_ts}')
+except Exception as e:
+    print(f'?/?|error')
+" 2>/dev/null || echo "?/?|?")
+        DL_RATIO=$(echo "$LINKS_SUMMARY" | cut -d'|' -f1)
+        DL_TS=$(echo "$LINKS_SUMMARY" | cut -d'|' -f2)
+        echo -e "  $OK Agentic Data Links     ${GREEN}ACTIVE${NC}     (${DL_RATIO} healthy, last: ${DL_TS})"
+    else
+        echo -e "  $UNKNOWN Agentic Data Links     ${DIM}NOT YET RUN${NC}"
+        echo -e "     ${DIM}Run 'bradix-links' to trigger all data links now${NC}"
+    fi
+else
+    echo -e "  $WARN Agentic Data Links     ${YELLOW}NOT INSTALLED${NC}"
+fi
+
+# Check that data links cron is installed
+if crontab -l 2>/dev/null | grep -q "bradix-links"; then
+    echo -e "  $OK Data Links Cron        ${GREEN}ACTIVE${NC}     (every 30 min)"
+else
+    echo -e "  $WARN Data Links Cron        ${YELLOW}NOT INSTALLED${NC}"
+fi
+
+echo ""
+
 # ─── SYSTEM HEALTH ─────────────────────────────────────────
 echo -e "${BOLD}  SYSTEM HEALTH${NC}"
 echo -e "  ─────────────────────────────────────────────"

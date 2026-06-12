@@ -58,6 +58,7 @@ pip install -q \
     fastapi \
     uvicorn \
     requests \
+    httpx \
     msal \
     gphotos-sync \
     icloudpd \
@@ -352,7 +353,63 @@ except Exception as e:
 PYEOF
 chmod +x "$BRADIX_HOME/agents/query_docs.py"
 
-# ── SUMMARY ──────────────────────────────────────────────────
+# ── STEP 10: AGENTIC DATA LINKS & HEALING AUTOMATION ────────
+step "10/10 — Setting up Agentic Data Links and Healing Automation"
+
+# Copy agentic_data_links.py from repo to agents directory
+AGENT_SRC="$BRADIX_HOME/repo/agent-integrations/agentic_data_links.py"
+if [ -f "$AGENT_SRC" ]; then
+    cp "$AGENT_SRC" "$BRADIX_HOME/agents/"
+    chmod +x "$BRADIX_HOME/agents/agentic_data_links.py"
+    ok "Agentic data links module installed"
+else
+    warn "agentic_data_links.py not found in repo — skipping"
+fi
+
+# Create healing automation runner
+HEAL_RUNNER="$BRADIX_HOME/agents/bradix-heal.sh"
+cat > "$HEAL_RUNNER" <<HEALEOF
+#!/usr/bin/env bash
+# Bradix Healing Automation — run by cron every 15 minutes
+HEALING_SCRIPT="$BRADIX_HOME/repo/one-click-install/monitoring/healing_automation.py"
+LOG_FILE="$BRADIX_HOME/logs/healing.log"
+export BRADIX_LOG_DIR="$BRADIX_HOME/logs"
+export CASE_DATA_PATH="$BRADIX_HOME/case-data"
+export JETSON_ENDPOINT="\${JETSON_IP:-localhost}:8000"
+if [ -f "\$HEALING_SCRIPT" ]; then
+    source "$BRADIX_HOME/venv/bin/activate" 2>/dev/null || true
+    python3 "\$HEALING_SCRIPT" >> "\$LOG_FILE" 2>&1
+fi
+HEALEOF
+chmod +x "$HEAL_RUNNER"
+
+# Create agentic data links runner
+LINKS_RUNNER="$BRADIX_HOME/agents/bradix-links.sh"
+cat > "$LINKS_RUNNER" <<LINKSEOF
+#!/usr/bin/env bash
+# Bradix Agentic Data Links — run by cron every 30 minutes
+LINKS_SCRIPT="$BRADIX_HOME/agents/agentic_data_links.py"
+LOG_FILE="$BRADIX_HOME/logs/data_links.log"
+export BRADIX_LOG_DIR="$BRADIX_HOME/logs"
+export CASE_DATA_PATH="$BRADIX_HOME/case-data"
+export JETSON_ENDPOINT="http://\${JETSON_IP:-localhost}:8000"
+if [ -f "\$LINKS_SCRIPT" ]; then
+    source "$BRADIX_HOME/venv/bin/activate" 2>/dev/null || true
+    python3 "\$LINKS_SCRIPT" >> "\$LOG_FILE" 2>&1
+fi
+LINKSEOF
+chmod +x "$LINKS_RUNNER"
+
+# Install cron jobs
+(crontab -l 2>/dev/null | grep -v "bradix-heal\|bradix-links" || true; \
+ echo "*/15 * * * * ${HEAL_RUNNER} >> $BRADIX_HOME/logs/healing.log 2>&1"; \
+ echo "*/30 * * * * ${LINKS_RUNNER} >> $BRADIX_HOME/logs/data_links.log 2>&1") | crontab -
+
+ok "Healing automation cron active (every 15 min)"
+ok "Agentic data links cron active (every 30 min)"
+ok "Manual commands: bash $HEAL_RUNNER  |  bash $LINKS_RUNNER"
+
+
 echo ""
 echo "============================================================"
 echo -e "${GREEN} BRADIX SETUP COMPLETE${NC}"
@@ -366,6 +423,8 @@ echo "  ✓ Vector index: $BRADIX_HOME/vectordb/"
 echo "  ✓ API gateway: http://localhost:8080"
 echo "  ✓ Ring downloader: $BRADIX_HOME/agents/ring_download.py"
 echo "  ✓ Query tool: $BRADIX_HOME/agents/query_docs.py"
+echo "  ✓ Healing automation: every 15 min (cron)"
+echo "  ✓ Agentic data links: every 30 min (cron)"
 echo ""
 echo "Next steps (manual — require your credentials):"
 echo ""
