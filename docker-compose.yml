@@ -1,0 +1,72 @@
+name: bradix
+
+services:
+  bradix-api:
+    build:
+      context: ./bradix-api
+    restart: unless-stopped
+    environment:
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TAILSCALE_IP: ${TAILSCALE_IP:-}
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-nous-hermes2}
+      N8N_WEBHOOK_BASE: http://n8n:5678/webhook
+      OUTBOUND_WEBHOOK_URL: ${OUTBOUND_WEBHOOK_URL:-}
+      ALLOW_EXTERNAL_SEND: ${ALLOW_EXTERNAL_SEND:-false}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      BRADIX_DATA_DIR: /data
+    ports:
+      - "${BRADIX_API_PORT:-8080}:8080"
+    volumes:
+      - bradix_data:/data
+    depends_on:
+      ollama:
+        condition: service_started
+      n8n:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  bradix-pwa:
+    build:
+      context: ./bradix-pwa
+      args:
+        VITE_BRADIX_API_URL: ${BRADIX_API_URL:-http://localhost:8080}
+    restart: unless-stopped
+    ports:
+      - "${BRADIX_PWA_PORT:-80}:80"
+    depends_on:
+      bradix-api:
+        condition: service_healthy
+
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      GENERIC_TIMEZONE: Australia/Brisbane
+      N8N_DIAGNOSTICS_ENABLED: "false"
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  bradix_data:
+  n8n_data:
+  ollama_data:
